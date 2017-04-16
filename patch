@@ -1,0 +1,84 @@
+--- /Users/kjw_junichi/work/blender/models/tutorials/image/imagenet/classify_image.py	2017-03-26 14:59:28.000000000 +0900
++++ ci_web.py	2017-04-15 07:21:35.000000000 +0900
+@@ -45,12 +37,53 @@ import numpy as np
+ from six.moves import urllib
+ import tensorflow as tf
+ 
++import http.server
++import socketserver
++
+ FLAGS = None
+ 
+ # pylint: disable=line-too-long
+ DATA_URL = 'http://download.tensorflow.org/models/image/imagenet/inception-2015-12-05.tgz'
+ # pylint: enable=line-too-long
+ 
++class MyHandler(http.server.SimpleHTTPRequestHandler):
++  def myproc(self, image_data):
++    with tf.Session() as sess:
++      softmax_tensor = sess.graph.get_tensor_by_name('softmax:0')
++      predictions = sess.run(softmax_tensor, {'DecodeJpeg/contents:0': image_data})
++      predictions = np.squeeze(predictions)
++
++    # Creates node ID --> English string lookup.
++    node_lookup = NodeLookup()
++
++    top_k = predictions.argsort()[-FLAGS.num_top_predictions:][::-1]
++    buf = ""
++    for node_id in top_k:
++      human_string = node_lookup.id_to_string(node_id)
++      score = predictions[node_id]
++      if buf:
++          buf = buf +","
++
++      buf = buf + ('{"name":"%s", "score":%.5f}' % (human_string, score))
++  
++    return buf
++  def do_GET(self):
++    body=b'{"classify_image": "ok"}'    
++    self.send_response(200)
++    self.send_header('Content-type', 'text/html; charset=utf-8')
++    self.send_header('Content-length', len(body))
++    self.end_headers()
++    self.wfile.write(body)
++
++  def do_POST(self):
++    self.data_string = self.rfile.read(int(self.headers['Content-Length']))
++    #print(self.data_string)
++    body = ('{"classify": [%s]}' % ( self.myproc(self.data_string))).encode('utf-8')
++    self.send_response(200)
++    self.send_header('Content-type', 'text/html; charset=utf-8')
++    self.send_header('Content-length', len(body))
++    self.end_headers()
++    self.wfile.write(body)
+ 
+ class NodeLookup(object):
+   """Converts integer node ID's to human readable labels."""
+@@ -126,6 +159,15 @@ def create_graph():
+     graph_def.ParseFromString(f.read())
+     _ = tf.import_graph_def(graph_def, name='')
+ 
++def run_web_server():
++  # Creates graph from saved GraphDef.
++  create_graph()
++  print("start web server!")
++
++  PORT = 8000
++  httpd = socketserver.TCPServer(("", PORT), MyHandler)
++  print("serving at port", PORT)
++  httpd.serve_forever()
+ 
+ def run_inference_on_image(image):
+   """Runs inference on an image.
+@@ -188,10 +230,7 @@ def maybe_download_and_extract():
+ 
+ def main(_):
+   maybe_download_and_extract()
+-  image = (FLAGS.image_file if FLAGS.image_file else
+-           os.path.join(FLAGS.model_dir, 'cropped_panda.jpg'))
+-  run_inference_on_image(image)
+-
++  run_web_server()
+ 
+ if __name__ == '__main__':
+   parser = argparse.ArgumentParser()

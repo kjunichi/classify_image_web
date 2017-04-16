@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    div#dropImg {
+      padding: 30px;
+      border-style: dotted;
+      background-color: #88DD88;
+    }
+  </style>
+  <meta charset="UTF-8">
+  <title>classify_image_web_client</title>
+</head>
+<body>
+  <div id="dropImg">ここに画像ファイルをドロップ</div>
+  <canvas id="world"></canvas>
+  <div id="out"></div>
+</body>
+<script>
+"use strict";
+
+function getImageBlob(cb) {
+    const c = document.getElementById("world");
+    c.toBlob((blob) => {
+        cb(blob);
+    }, 'image/jpeg', 0.95)
+}
+
+function classify_image_web() {
+    const url = "/";
+    getImageBlob((blob) => {
+        fetch(url, {
+            method: 'POST',
+            body: blob
+        }).then((res) => {
+            return res.json();
+        }).then((json) => {
+            console.dir(json);
+            out.innerText = JSON.stringify(json);
+        });
+    });
+}
+
+function setCanvasSize(c, i) {
+    c.width = 512;
+    c.height = 512;
+    if (i.width > i.height) {
+        c.height = c.width * (i.height / i.width);
+    } else {
+        c.width = c.height * (i.width / i.height);
+    }
+}
+
+function classify_image(file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        out.innerText = 'Reader onload start';
+
+        const buffer = new Uint8Array(reader.result);
+        const canvas = document.getElementById("world");
+        const img = new Image();
+
+        img.onload = function () {
+            setCanvasSize(canvas, img);
+            const ctx = canvas.getContext("2d");
+            const orientation = 0;
+            ctx.drawImage(img, 0, 0);
+            classify_image_web();
+        }
+        img.src = URL.createObjectURL(new Blob([buffer], {
+            type: "image/jpeg"
+        }));
+        out.innerText = "かんがえちゅう。。。";
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+const out = document.getElementById("out");
+
+out.innerHTML = "";
+
+//ドロップされるエリアの取得
+const dropArea = document.getElementById('dropImg');
+
+dropArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropArea.style.backgroundColor = "#229922";
+}, false);
+
+dropArea.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    dropArea.style.backgroundColor = "#88DD88";
+}, false);
+
+dropArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+
+    dropArea.style.backgroundColor = "#88DD88";
+    const file = e.dataTransfer.files[0];
+    if (!file.type.match(/image\/jpeg/)) {
+        // 指定したファイル以外の場合、処理を続行しない。
+        e.stopPropagation();
+        return false;
+    }
+    classify_image(file);
+
+    e.stopPropagation();
+    out.innerText = "Drop end";
+}, false);
+
+</script>
+</html>
