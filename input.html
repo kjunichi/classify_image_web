@@ -15,7 +15,7 @@
 <body>
   <div id="dropImg">ここに画像ファイルをドロップ</div>
   <canvas id="world"></canvas>
-  <div id="out"></div>
+  <div id="out1"></div>
 
 <script>
 "use strict";
@@ -89,7 +89,7 @@ function classify_image(file) {
             setCanvasSize(canvas, img);
             const ctx = canvas.getContext("2d");
             const orientation = 0;
-            ctx.drawImage(img, 0, 0);
+            ctx.drawImage(img, 0, 0, 512,512);
             classify_image_web();
         }
         img.src = URL.createObjectURL(new Blob([buffer], {
@@ -100,7 +100,7 @@ function classify_image(file) {
     reader.readAsArrayBuffer(file);
 }
 
-const out = document.getElementById("out");
+const out = document.getElementById("out1");
 
 out.innerHTML = "";
 
