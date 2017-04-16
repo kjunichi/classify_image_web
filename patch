@@ -1,6 +1,6 @@
---- /Users/kjw_junichi/work/blender/models/tutorials/image/imagenet/classify_image.py	2017-03-26 14:59:28.000000000 +0900
-+++ ci_web.py	2017-04-15 07:21:35.000000000 +0900
-@@ -45,12 +37,53 @@ import numpy as np
+--- models/tutorials/image/imagenet/classify_image.py	2017-04-16 07:28:19.000000000 +0900
++++ classify_image_web.py	2017-04-16 11:56:25.000000000 +0900
+@@ -45,12 +45,63 @@ import numpy as np
  from six.moves import urllib
  import tensorflow as tf
  
@@ -35,6 +35,16 @@
 +  
 +    return buf
 +  def do_GET(self):
++    if self.path == "/input":
++      f = open("./input.html", encoding='utf-8')
++      body = (f.read()).encode('utf-8')
++      self.send_response(200)
++      self.send_header('Content-type', 'text/html; charset=utf-8')
++      self.send_header('Content-length', len(body))
++      self.end_headers()
++      self.wfile.write(body)
++      return
++
 +    body=b'{"classify_image": "ok"}'    
 +    self.send_response(200)
 +    self.send_header('Content-type', 'text/html; charset=utf-8')
@@ -54,7 +64,7 @@
  
  class NodeLookup(object):
    """Converts integer node ID's to human readable labels."""
-@@ -126,6 +159,15 @@ def create_graph():
+@@ -126,6 +177,15 @@ def create_graph():
      graph_def.ParseFromString(f.read())
      _ = tf.import_graph_def(graph_def, name='')
  
@@ -70,7 +80,7 @@
  
  def run_inference_on_image(image):
    """Runs inference on an image.
-@@ -188,10 +230,7 @@ def maybe_download_and_extract():
+@@ -188,10 +248,7 @@ def maybe_download_and_extract():
  
  def main(_):
    maybe_download_and_extract()
