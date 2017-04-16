@@ -16,15 +16,39 @@
   <div id="dropImg">ここに画像ファイルをドロップ</div>
   <canvas id="world"></canvas>
   <div id="out"></div>
-</body>
+
 <script>
 "use strict";
 
+function dataURItoBlob(dataURI) {
+    // convert base64 to raw binary data held in a string
+    // doesn't handle URLEncoded DataURIs
+    const byteString = atob(dataURI.split(',')[1]);
+
+    // separate out the mime component
+    const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0]
+
+    // write the bytes of the string to an ArrayBuffer
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+    }
+
+    // write the ArrayBuffer to a blob, and you're done
+    return new Blob([ab],{ "type" : mimeString });       
+}
+
 function getImageBlob(cb) {
     const c = document.getElementById("world");
-    c.toBlob((blob) => {
-        cb(blob);
-    }, 'image/jpeg', 0.95)
+    try {
+        c.toBlob((blob) => {
+            cb(blob);
+        }, 'image/jpeg', 0.95);
+    } catch(e) {
+        cb(dataURItoBlob(c.toDataURL("image/jpeg")));    
+    }
+
 }
 
 function classify_image_web() {
@@ -108,6 +132,6 @@ dropArea.addEventListener('drop', (e) => {
     e.stopPropagation();
     out.innerText = "Drop end";
 }, false);
-
 </script>
+</body>
 </html>
