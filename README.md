@@ -3,6 +3,7 @@ web app for classify_image.py(tensorflow)
 
 # prerequesties
 
+- python3
 - Tensorflow
 - git command
 - patch command
