@@ -20,11 +20,11 @@ python classify_image_web.py
 ## macOS
 
 ```shell
-open input.html
+open http://localhost:8000/input
 ```
 
 ## Windows
 
 ```shell
-start input.html
+start http://localhost:8000/input
 ```
