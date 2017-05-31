@@ -28,3 +28,5 @@ open http://localhost:8000/input
 ```shell
 start http://localhost:8000/input
 ```
+
+Firefox,Chrome works well.
