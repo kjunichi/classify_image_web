@@ -95,7 +95,7 @@ function classify_image(file) {
         img.src = URL.createObjectURL(new Blob([buffer], {
             type: "image/jpeg"
         }));
-        out.innerText = "かんがえちゅう。。。";
+        out.innerText = "Now calculating(かんがえちゅう。。。)";
     };
     reader.readAsArrayBuffer(file);
 }
